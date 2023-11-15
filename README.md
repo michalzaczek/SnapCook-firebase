@@ -1,0 +1,1 @@
+# SnapCook-firebase
