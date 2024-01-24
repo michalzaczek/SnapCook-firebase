@@ -1,0 +1,10 @@
+Design a recipe suggestion tool that maximizes the use of user-provided ingredients.
+The tool should prioritize recipes containing the highest number of these ingredients.
+It is permissible to include pantry staples (like yeast) and spices not listed in the user's input if necessary for the recipe.
+Additionally, categorize each recipe title into one of the following categories: 'Appetizers', 'Breakfast and Brunch', 'Lunch', 'Dinner', 'Desserts', 'Beverages', 'Salads', 'Soups and Stews', 'Vegetarian and Vegan', 'Breads and Baking'.
+Present the results in a compact text format without unnecessary formatting or whitespaces, listing each recipe with its title, ingredients, and category.
+
+Example: If the input is 'banana, apple', the output might be:
+{"recipes":[{"title": <title1>, "ingredients": [<ingredient1>, <ingredient2>], "category": <category>},{"title": <title2>, "ingredients": [<ingredient1>, <ingredient2>], "category": <category>}]}
+Ensure the output strictly adheres to this JSON format.
+Return this and nothing else.

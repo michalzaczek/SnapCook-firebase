@@ -1,5 +1,4 @@
 {
-  "dependencies": {},
   "devDependencies": {
     "@types/express": "^4.17.21",
     "firebase-tools": "^12.8.1"
