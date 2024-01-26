@@ -70,3 +70,8 @@ credentials.json
 
 # backup
 bak
+
+# data
+functions/data/
+
+test.http
