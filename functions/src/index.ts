@@ -47,6 +47,41 @@ const authenticate = async (
   }
 };
 
+// Middleware for checking premium status
+const checkIfPremium = async (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): Promise<void> => {
+  const userId = req.user?.uid;
+
+  if (!userId) {
+    res.status(403).send("User ID not found.");
+    return;
+  }
+
+  try {
+    const db = admin.firestore();
+    const subscriptionsRef = db
+      .collection("users")
+      .doc(userId)
+      .collection("subscriptions");
+    const querySnapshot = await subscriptionsRef
+      .where("status", "==", "active")
+      .get();
+
+    const isPremium = !querySnapshot.empty;
+    if (isPremium) {
+      next(); // User is premium, proceed to the next middleware or request handler
+    } else {
+      res.status(403).send("Access denied. User is not a premium subscriber.");
+    }
+  } catch (error) {
+    console.error("Error checking premium status:", error);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 async function handleOpenAIRequest(
   req: express.Request,
   res: express.Response,
@@ -87,8 +122,6 @@ async function handleOpenAIRequest(
       // format: "json_object",
     };
 
-    // res.send(payload);
-
     const headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${openai_apikey}`,
@@ -99,15 +132,16 @@ async function handleOpenAIRequest(
       payload,
       { headers }
     );
-    // res.send(openaiResponse.data);
     res.json(JSON.parse(openaiResponse.data.choices[0].message.content));
   } catch (error) {
-    res.status(500).send("Error while communicating with OpenAI: " + error);
+    res
+      .status(500)
+      .send("Error while communicating with external server: " + error);
   }
 }
 
 // ------------ getIngredients ------------ //
-app.post("/getIngredients", authenticate, async (req, res) => {
+app.post("/getIngredients", authenticate, checkIfPremium, async (req, res) => {
   const image = req.body.image;
 
   const userInputs = [
@@ -122,7 +156,7 @@ app.post("/getIngredients", authenticate, async (req, res) => {
 });
 
 //---------------- getRecipesList ----------------//
-app.get("/getRecipesList", authenticate, async (req, res) => {
+app.get("/getRecipesList", authenticate, checkIfPremium, async (req, res) => {
   const ingredients = req.query.ingredients;
 
   if (typeof ingredients !== "string" || ingredients.trim() === "") {
@@ -134,7 +168,7 @@ app.get("/getRecipesList", authenticate, async (req, res) => {
 });
 
 // --------------- getRecipeDetails ------------------- //
-app.get("/getRecipeDetails", authenticate, async (req, res) => {
+app.get("/getRecipeDetails", authenticate, checkIfPremium, async (req, res) => {
   const { ingredients, title, category } = req.query;
 
   if (typeof ingredients !== "string" || ingredients.trim() === "") {

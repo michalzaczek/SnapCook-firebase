@@ -32,6 +32,36 @@ const authenticate = async (req, res, next) => {
         res.status(500).send("Error verifying token.");
     }
 };
+// Middleware for checking premium status
+const checkIfPremium = async (req, res, next) => {
+    var _a;
+    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.uid;
+    if (!userId) {
+        res.status(403).send("User ID not found.");
+        return;
+    }
+    try {
+        const db = admin.firestore();
+        const subscriptionsRef = db
+            .collection("users")
+            .doc(userId)
+            .collection("subscriptions");
+        const querySnapshot = await subscriptionsRef
+            .where("status", "==", "active")
+            .get();
+        const isPremium = !querySnapshot.empty;
+        if (isPremium) {
+            next(); // User is premium, proceed to the next middleware or request handler
+        }
+        else {
+            res.status(403).send("Access denied. User is not a premium subscriber.");
+        }
+    }
+    catch (error) {
+        console.error("Error checking premium status:", error);
+        res.status(500).send("Internal Server Error");
+    }
+};
 async function handleOpenAIRequest(req, res, userInput, model = "gpt-3.5-turbo", maxTokens = 1000) {
     const systemMessageFolder = "./data/";
     try {
@@ -57,21 +87,21 @@ async function handleOpenAIRequest(req, res, userInput, model = "gpt-3.5-turbo",
             max_tokens: maxTokens,
             // format: "json_object",
         };
-        // res.send(payload);
         const headers = {
             "Content-Type": "application/json",
             Authorization: `Bearer ${openai_apikey}`,
         };
         const openaiResponse = await axios_1.default.post("https://api.openai.com/v1/chat/completions", payload, { headers });
-        // res.send(openaiResponse.data);
         res.json(JSON.parse(openaiResponse.data.choices[0].message.content));
     }
     catch (error) {
-        res.status(500).send("Error while communicating with OpenAI: " + error);
+        res
+            .status(500)
+            .send("Error while communicating with external server: " + error);
     }
 }
 // ------------ getIngredients ------------ //
-app.post("/getIngredients", authenticate, async (req, res) => {
+app.post("/getIngredients", authenticate, checkIfPremium, async (req, res) => {
     const image = req.body.image;
     const userInputs = [
         { type: "text", text: "What’s in this image?" },
@@ -83,7 +113,7 @@ app.post("/getIngredients", authenticate, async (req, res) => {
     handleOpenAIRequest(req, res, userInputs, "gpt-4-vision-preview", 300);
 });
 //---------------- getRecipesList ----------------//
-app.get("/getRecipesList", authenticate, async (req, res) => {
+app.get("/getRecipesList", authenticate, checkIfPremium, async (req, res) => {
     const ingredients = req.query.ingredients;
     if (typeof ingredients !== "string" || ingredients.trim() === "") {
         res.status(400).send("No valid ingredients provided");
@@ -92,7 +122,7 @@ app.get("/getRecipesList", authenticate, async (req, res) => {
     handleOpenAIRequest(req, res, ingredients);
 });
 // --------------- getRecipeDetails ------------------- //
-app.get("/getRecipeDetails", authenticate, async (req, res) => {
+app.get("/getRecipeDetails", authenticate, checkIfPremium, async (req, res) => {
     const { ingredients, title, category } = req.query;
     if (typeof ingredients !== "string" || ingredients.trim() === "") {
         res.status(400).send("No valid ingredients provided");
@@ -108,6 +138,9 @@ app.get("/getRecipeDetails", authenticate, async (req, res) => {
     }
     const userMessage = `title: ${title}, ingredients: ${ingredients}, category: ${category}`;
     handleOpenAIRequest(req, res, userMessage);
+});
+app.get("/test", authenticate, checkIfPremium, async (req, res) => {
+    res.send("User is premium");
 });
 // Export the API to Firebase Functions
 exports.api = functions.https.onRequest(app);
