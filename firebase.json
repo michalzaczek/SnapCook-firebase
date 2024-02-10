@@ -9,9 +9,7 @@
         "firebase-debug.log",
         "firebase-debug.*.log"
       ],
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run build"
-      ]
+      "predeploy": ["npm --prefix \"$RESOURCE_DIR\" run build"]
     }
   ],
   "emulators": {
@@ -21,6 +19,11 @@
     "ui": {
       "enabled": true,
       "port": 5002
+    },
+    "auth": {
+      "enabled": true,
+      "host": "0.0.0.0",
+      "port": 5003
     },
     "singleProjectMode": true
   }
