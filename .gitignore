@@ -77,3 +77,4 @@ functions/data/
 test.http
 
 functions/lib/*.js
+functions/lib/*.js.map
