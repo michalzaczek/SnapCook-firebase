@@ -75,3 +75,5 @@ bak
 functions/data/
 
 test.http
+
+functions/lib/*.js
