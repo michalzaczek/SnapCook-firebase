@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { Request, Response, RequestHandler } from "express";
 import * as express from "express";
 import * as cors from "cors";
 import * as bodyParser from "body-parser";
@@ -27,11 +28,7 @@ app.use(cors({ origin: true }));
 app.use(bodyParser.json());
 
 // Middleware for authentication
-const authenticate = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-): Promise<void> => {
+const authenticate: RequestHandler = async (req, res, next): Promise<void> => {
   const idToken = req.get("Authorization")?.split("Bearer ")[1];
   if (!idToken) {
     res.status(403).send("No token provided.");
@@ -48,10 +45,10 @@ const authenticate = async (
 };
 
 // Middleware for checking premium status
-const checkIfPremium = async (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
+const checkIfPremium: RequestHandler = async (
+  req,
+  res,
+  next
 ): Promise<void> => {
   const userId = req.user?.uid;
 
@@ -83,13 +80,13 @@ const checkIfPremium = async (
 };
 
 async function handleOpenAIRequest(
-  req: express.Request,
-  res: express.Response,
+  req: Request,
+  res: Response,
   userInput:
     | string
     | Array<{ type: string; text?: string; image_url?: { url: string } }>,
-  model: string = "gpt-3.5-turbo",
-  maxTokens: number = 1000
+  model = "gpt-3.5-turbo",
+  maxTokens = 1000
 ): Promise<void> {
   const systemMessageFolder = "./data/";
 
