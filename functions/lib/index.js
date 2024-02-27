@@ -139,9 +139,6 @@ app.get("/getRecipeDetails", authenticate, checkIfPremium, async (req, res) => {
     const userMessage = `title: ${title}, ingredients: ${ingredients}, category: ${category}`;
     handleOpenAIRequest(req, res, userMessage);
 });
-app.get("/test", authenticate, checkIfPremium, async (req, res) => {
-    res.send("User is premium");
-});
 // Export the API to Firebase Functions
 exports.api = functions.https.onRequest(app);
 //# sourceMappingURL=index.js.map
