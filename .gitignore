@@ -64,15 +64,14 @@ node_modules/
 
 # dotenv environment variables file
 .env
+extensions/firestore-stripe-payments.secret.local
+firestore-stripe-payments.secret.local
 
 # credentials
 credentials.json
 
 # backup
 bak
-
-# data
-functions/data/
 
 test.http
 

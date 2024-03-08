@@ -2,5 +2,5 @@
   "watch": ["src/**/*.ts"],
   "ext": "ts",
   "ignore": ["src/**/*.spec.ts", "node_modules"],
-  "exec": "npm run build && firebase emulators:start --only functions"
+  "exec": "npm run build && firebase emulators:start"
 }
